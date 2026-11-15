@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>本文の所有者を追う — レッスン 1</title>
+  <link rel="stylesheet" href="../assets/learning.css">
+</head>
+<body>
+<main>
+  <nav aria-label="教材内の移動"><a href="../README.md">リポジトリの案内</a><a href="../reference/ownership.html">復習用メモ</a></nav>
+  <header>
+    <p class="eyebrow">LESSON 01 / 読む・予想する・説明する</p>
+    <h1>この本文は、今だれのもの？</h1>
+    <p class="goal">今日のゴールは、投入前・投入後・受信後で、本文の所有者を説明すること。まだ <code>peek</code> は実装しない。</p>
+  </header>
+  <section aria-labelledby="knowledge">
+    <h2 id="knowledge">読むための最小限の知識</h2>
+    <p><code>String</code> を値として関数へ渡すと、所有権が移る。戻り値でも所有権を移せる。一方、参照を渡す場合は、所有者を残したままアクセスする。</p>
+    <p class="caption">原典：<a href="https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html#ownership-and-functions">Rust Book：関数と所有権</a>、<a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">参照と借用</a>。</p>
+  </section>
+  <section aria-labelledby="trace">
+    <h2 id="trace">1. 一件の本文を追う</h2>
+    <p><a href="../tests/broker.rs">使用例のテスト</a>から、一件の流れだけを抜き出した。必要に応じて <a href="../src/lib.rs">実装</a>を見ながら、A・B・C の直後の所有者を考えよう。</p>
+    <pre><code>let mut broker = Broker::new();
+let first = String::from("注文を受け付けた"); // A
+broker.publish(first);                     // B
+let received = broker.receive()
+    .expect("最初のメッセージがある");       // C</code></pre>
+    <p><code>expect</code> は値があれば中身を取り出す。ここでは先に一件投入しているので、その本文を受け取れる。<a href="https://doc.rust-lang.org/std/option/enum.Option.html#method.expect">公式仕様</a></p>
+  </section>
+  <section aria-labelledby="predict">
+    <h2 id="predict">2. コンパイル前に予想する</h2>
+    <ol>
+      <li>A・B・C それぞれの直後、本文を所有しているのはどこ？</li>
+      <li>B と C の間に <code>println!("{first}");</code> を入れたら、コンパイルできる？ 理由は？</li>
+      <li><code>publish</code> の後も <code>broker</code> を使えるのはなぜ？ <code>first</code> と扱いが違う箇所を型から探そう。</li>
+    </ol>
+    <p>まず自分の言葉で、この会話に回答してね。分からない箇所は「ここが分からない」で大丈夫。回答を見て、必要なところだけ一緒に確かめる。</p>
+    <details>
+      <summary>自分で答えたあとに、考え方を確認する</summary>
+      <p>A では <code>first</code> が所有する。B の呼び出しが終わると、本文は <code>broker</code> 内のキューに移っている。C ではキューから取り出した本文を <code>received</code> が所有する。</p>
+      <p>B の後に <code>first</code> を使うとコンパイルできない。<code>publish</code> の引数 <code>message: String</code> へ値を渡しているから。一方、ブローカーは <code>&amp;mut self</code> として借りており、呼び出し元が所有したままなので、呼び出し後も使える。</p>
+      <p><code>receive</code> が返した <code>Option&lt;String&gt;</code> から <code>expect</code> で本文を取り出し、<code>received</code> に移している。「元の変数名に戻る」わけではない。</p>
+    </details>
+  </section>
+  <section aria-labelledby="recall">
+    <h2 id="recall">3. 読み直す前に、思い出す</h2>
+    <p>次回の開始時にこのページを閉じたまま、<code>publish</code> と <code>receive</code> の間で本文がどこにあるかを説明してみよう。</p>
+    <p>今日の説明ができたら、<a href="../exercises/01-peek.md">最初の実装課題</a>へ進む。所有権を渡す受信と、所有権を残す読み取りの違いを考える。</p>
+  </section>
+  <footer>
+    <p>復習は <a href="../reference/ownership.html">所有権を読むためのメモ</a>へ。原典を読むなら、まず <a href="https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html#ownership-and-functions">Rust Book の「Ownership and Functions」</a>と、その次の「Return Values and Scope」だけで十分。</p>
+    <p>疑問はいつでもこの会話で聞いてね。教材を開いたことと、理解できたことは分けて記録する。</p>
+  </footer>
+</main>
+</body>
+</html>

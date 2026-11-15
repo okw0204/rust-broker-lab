@@ -1,0 +1,55 @@
+:root {
+  color-scheme: light;
+  --ink: #202932;
+  --muted: #596570;
+  --line: #d8dfe4;
+  --paper: #ffffff;
+  --wash: #f4f6f8;
+  --accent: #245d76;
+  font-family: system-ui, -apple-system, "Noto Sans JP", sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.8;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 760px; margin: 0 auto; padding: 44px 28px 64px; }
+nav, footer, .eyebrow, .caption { font-size: 0.875rem; color: var(--muted); }
+nav { margin-bottom: 36px; }
+nav a + a { margin-left: 20px; }
+.eyebrow { letter-spacing: 0.08em; margin-bottom: 8px; }
+h1 { font-size: clamp(1.7rem, 5vw, 2.3rem); line-height: 1.4; margin: 0 0 16px; font-weight: 650; }
+h2 { font-size: 1.15rem; margin: 32px 0 12px; }
+p { margin: 12px 0; }
+a { color: var(--accent); text-underline-offset: 0.2em; }
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+li { margin: 8px 0; }
+ul, ol { padding-left: 1.5em; }
+code { font-family: ui-monospace, "Noto Sans Mono", monospace; font-size: 0.9em; }
+pre { padding: 18px 20px; border: 1px solid var(--line); border-radius: 4px; overflow-x: auto; background: var(--wash); line-height: 1.7; }
+pre code { font-size: 0.875rem; }
+.goal { padding-left: 16px; border-left: 3px solid var(--accent); }
+details { margin: 24px 0; border-block: 1px solid var(--line); padding: 16px 0; }
+summary { cursor: pointer; color: var(--accent); }
+footer { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 40px; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; }
+th, td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); padding: 12px 8px; }
+th { font-weight: 600; }
+
+@media (max-width: 480px) {
+  main { padding: 24px 18px 40px; }
+  pre { padding: 14px 12px; }
+  nav a { display: inline-block; }
+}
+
+@media print {
+  :root { color: #000; background: #fff; font-size: 10pt; }
+  main { max-width: none; padding: 0; }
+  nav { display: none; }
+  h1, h2 { break-after: avoid; }
+  pre, table, details { break-inside: avoid; }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; background: none; }
+  a { color: inherit; }
+}
