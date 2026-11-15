@@ -10,10 +10,12 @@
 <main>
   <nav aria-label="教材内の移動"><a href="../README.md">リポジトリの案内</a><a href="../reference/ownership.html">復習用メモ</a></nav>
   <header>
-    <p class="eyebrow">LESSON 01 / 読む・予想する・説明する</p>
+    <p class="eyebrow">LESSON 01 / 読む・予想する・実装する・説明する</p>
     <h1>この本文は、今だれのもの？</h1>
-    <p class="goal">今日のゴールは、投入前・投入後・受信後で、本文の所有者を説明すること。まだ <code>peek</code> は実装しない。</p>
+    <p class="goal">本文の所有者を追い、所有権を渡さず先頭を読む <code>peek</code> を実装しよう。受信と読み取りで、型を変える理由を説明できることがゴール。</p>
   </header>
+  <nav aria-label="このレッスンの流れ"><a href="#trace">コードを読む</a><a href="#predict">予想する</a><a href="#exercise">実装する</a><a href="#reflect">振り返る</a></nav>
+  <p>解説と課題はこのページで読み、コードは手元のエディタで変更する。回答・質問・レビュー依頼はこの会話へ。ブラウザから自動送信はされない。</p>
   <section aria-labelledby="knowledge">
     <h2 id="knowledge">読むための最小限の知識</h2>
     <p><code>String</code> を値として関数へ渡すと、所有権が移る。戻り値でも所有権を移せる。一方、参照を渡す場合は、所有者を残したままアクセスする。</p>
@@ -21,7 +23,10 @@
   </section>
   <section aria-labelledby="trace">
     <h2 id="trace">1. 一件の本文を追う</h2>
-    <p><a href="../tests/broker.rs">使用例のテスト</a>から、一件の流れだけを抜き出した。必要に応じて <a href="../src/lib.rs">実装</a>を見ながら、A・B・C の直後の所有者を考えよう。</p>
+    <p>まずリポジトリのルートで、使用例のテストを動かそう。</p>
+    <pre><code>cargo test --offline --test broker</code></pre>
+    <p><a href="../tests/broker.rs">使用例のテスト</a>、<a href="../src/lib.rs">実装</a>の順に読む。本文を保持する場所と、<code>publish</code>・<code>receive</code> による状態の変化を追おう。<code>new</code> と <code>#[derive(Default)]</code> は、今は空の状態を作る仕組みとして確認すればよい。</p>
+    <p>使用例から、一件の流れだけを抜き出した。A・B・C の直後の所有者を考えよう。</p>
     <pre><code>let mut broker = Broker::new();
 let first = String::from("注文を受け付けた"); // A
 broker.publish(first);                     // B
@@ -44,10 +49,42 @@ let received = broker.receive()
       <p><code>receive</code> が返した <code>Option&lt;String&gt;</code> から <code>expect</code> で本文を取り出し、<code>received</code> に移している。「元の変数名に戻る」わけではない。</p>
     </details>
   </section>
-  <section aria-labelledby="recall">
-    <h2 id="recall">3. 読み直す前に、思い出す</h2>
-    <p>次回の開始時にこのページを閉じたまま、<code>publish</code> と <code>receive</code> の間で本文がどこにあるかを説明してみよう。</p>
-    <p>今日の説明ができたら、<a href="../exercises/01-peek.md">最初の実装課題</a>へ進む。所有権を渡す受信と、所有権を残す読み取りの違いを考える。</p>
+  <section aria-labelledby="exercise">
+    <h2 id="exercise">3. 演習：取り出さずに先頭を読む</h2>
+    <p>ここまでの説明ができたら、次は実装しよう。「次に届く本文を確認したいが、まだ受信はしたくない」という要望に応え、<code>Broker</code> に <code>peek</code> を追加する。</p>
+    <p><code>receive</code> は本文を取り出して所有権を渡す。一方、今回の読み取りでは所有権をブローカーに残す。必要なら <a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">Rust Book：参照と借用</a>を読み、所有権を渡さないアクセスと、借用中の変更の制約を確認しよう。</p>
+    <h3>追加する動作</h3>
+    <ul>
+      <li>メッセージがあれば、先頭の本文を読み取り専用の参照として返す。本文の所有権はブローカーに残る。</li>
+      <li>空なら、値がないことを <code>Option</code> で表す。空であることを理由にパニックさせない。</li>
+      <li><code>peek</code> 自体は、キューの内容と順序を変えない。</li>
+      <li>呼び出し元は、読み取るためだけにブローカーを可変で借用する必要がない。</li>
+      <li><code>publish</code> と <code>receive</code> の既存の動作は維持する。</li>
+    </ul>
+    <p><code>src/lib.rs</code> にメソッドを、<code>tests/broker.rs</code> にテストを追加する。メソッドの型と実装は自分で考えよう。今回は ACK、複数キュー、ジェネリクスは追加しない。</p>
+    <h3>テストで確かめる場面</h3>
+    <p>公開操作だけを使って、少なくとも次を確かめよう。内部のフィールドを公開する必要はない。</p>
+    <ol>
+      <li>空のブローカーの先頭を読んでも値がない。</li>
+      <li>異なる本文を二つ投入すると、先に投入した本文が読める。</li>
+      <li>続けて二度読んでも同じ本文で、まだ取り出されていない。</li>
+      <li>読み取りを終えてから受信すると、先頭の本文を受け取れる。その後に読むと二件目が見える。</li>
+      <li>最後の本文まで受信した後は、先頭を読んでも値がない。</li>
+    </ol>
+    <p>変更したら、既存の動作も含めてテストする。</p>
+    <pre><code>cargo test --offline</code></pre>
+    <p>迷ったら、どの動作や型で困っているかをこの会話で教えてね。コンパイラのエラーなら、試したコードと自分が考えた原因を添えると、必要なヒントから一緒に考えられる。</p>
+  </section>
+  <section aria-labelledby="reflect">
+    <h2 id="reflect">4. 振り返りと完了の目安</h2>
+    <p>上の場面を自分のテストで確かめ、既存テストも通ったら、次を自分の言葉で説明しよう。</p>
+    <ul>
+      <li>戻り値と <code>self</code> の型を選んだ理由。</li>
+      <li><code>receive</code> と <code>peek</code> で、本文の所有者がどう違うか。</li>
+      <li>本文の参照を後で使う予定がある間に <code>receive</code> を呼ぶと、何が問題になるか。必要なら手元で試し、コンパイラの指摘を読む。</li>
+    </ul>
+    <p>レビューを頼むときは、変更したファイル、テスト結果、上の説明を教えてね。説明したあとに参考実装と比較する。このページには実装の解答を載せていない。</p>
+    <p>次回の開始時はこのページを閉じたまま、<code>publish</code>・<code>peek</code>・<code>receive</code> の前後で本文がどこにあるかを思い出してみよう。</p>
   </section>
   <footer>
     <p>復習は <a href="../reference/ownership.html">所有権を読むためのメモ</a>へ。原典を読むなら、まず <a href="https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html#ownership-and-functions">Rust Book の「Ownership and Functions」</a>と、その次の「Return Values and Scope」だけで十分。</p>

@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+
+repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+lesson="$repo_dir/lessons/0001-message-ownership.html"
+windows_shell=$(command -v cmd.exe) || {
+    printf '%s\n' 'この起動コマンドには Windows 連携が有効な WSL が必要です。' >&2
+    exit 1
+}
+windows_lesson=$(wslpath -w "$lesson")
+
+# cmd.exe に WSL の UNC パスを作業ディレクトリとして渡さない。
+cd -- "$(dirname -- "$windows_shell")"
+printf 'レッスンを開きます: %s\n' "$lesson"
+exec "$windows_shell" /d /c start "" "$windows_lesson"
