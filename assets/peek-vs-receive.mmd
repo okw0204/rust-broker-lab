@@ -1,0 +1,16 @@
+---
+config:
+  theme: neutral
+  htmlLabels: false
+  fontFamily: 'system-ui, sans-serif'
+  flowchart:
+    htmlLabels: false
+    curve: linear
+---
+%% Rendered with Mermaid 11.17.2; keep the SVG alongside this source.
+flowchart TB
+    before["キューに本文がある<br/>所有者：broker"]
+    kept["本文はキューに残る<br/>所有者：broker のまま<br/>呼び出し元は参照で読む"]
+    taken["本文をキューから取り出す<br/>所有者：received<br/>呼び出し元が本文を持つ"]
+    before -->|peek：借用| kept
+    before -->|receive と expect：所有権を移す| taken

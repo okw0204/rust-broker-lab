@@ -1,0 +1,16 @@
+---
+config:
+  theme: neutral
+  htmlLabels: false
+  fontFamily: 'system-ui, sans-serif'
+  flowchart:
+    htmlLabels: false
+    curve: linear
+---
+%% Rendered with Mermaid 11.17.2; keep the SVG alongside this source.
+flowchart TB
+    A["A：first が所有"]
+    B["B：broker 内のキューが所有"]
+    C["C：received が所有"]
+    A -->|publish：所有権を渡す| B
+    B -->|receive と expect：所有権を受け取る| C

@@ -44,7 +44,10 @@ let received = broker.receive()
     <p>まず自分の言葉で、この会話に回答してね。分からない箇所は「ここが分からない」で大丈夫。回答を見て、必要なところだけ一緒に確かめる。</p>
     <details>
       <summary>自分で答えたあとに、考え方を確認する</summary>
-      <p>A では <code>first</code> が所有する。B の呼び出しが終わると、本文は <code>broker</code> 内のキューに移っている。C ではキューから取り出した本文を <code>received</code> が所有する。</p>
+      <figure class="diagram">
+        <img src="../assets/ownership-transfer.svg" alt="A では first、B では broker 内のキュー、C では received が本文を所有する。">
+        <figcaption>矢印は、操作の前後で所有者が変わることを示す。本文のコピーや、メモリ上の物理的な移動を表す図ではない。</figcaption>
+      </figure>
       <p>B の後に <code>first</code> を使うとコンパイルできない。<code>publish</code> の引数 <code>message: String</code> へ値を渡しているから。一方、ブローカーは <code>&amp;mut self</code> として借りており、呼び出し元が所有したままなので、呼び出し後も使える。</p>
       <p><code>receive</code> が返した <code>Option&lt;String&gt;</code> から <code>expect</code> で本文を取り出し、<code>received</code> に移している。「元の変数名に戻る」わけではない。</p>
     </details>
@@ -52,7 +55,13 @@ let received = broker.receive()
   <section aria-labelledby="exercise">
     <h2 id="exercise">3. 演習：取り出さずに先頭を読む</h2>
     <p>ここまでの説明ができたら、次は実装しよう。「次に届く本文を確認したいが、まだ受信はしたくない」という要望に応え、<code>Broker</code> に <code>peek</code> を追加する。</p>
-    <p><code>receive</code> は本文を取り出して所有権を渡す。一方、今回の読み取りでは所有権をブローカーに残す。必要なら <a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">Rust Book：参照と借用</a>を読み、所有権を渡さないアクセスと、借用中の変更の制約を確認しよう。</p>
+    <figure class="diagram">
+      <div class="diagram-scroll">
+        <img src="../assets/peek-vs-receive.svg" alt="本文がある状態で peek を呼ぶと、キューが所有したまま呼び出し元が参照で読む。receive と expect を使うと、本文を取り出し received が所有する。">
+      </div>
+      <figcaption>本文がある同じ開始状態から、別々の操作を選んだ場合。矢印は操作による変化を示し、左右を順番に実行する意味ではない。狭い画面では図を横にスクロールできる。</figcaption>
+    </figure>
+    <p>必要なら <a href="https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html">Rust Book：参照と借用</a>を読み、所有権を渡さないアクセスと、借用中の変更の制約を確認しよう。</p>
     <h3>追加する動作</h3>
     <ul>
       <li>メッセージがあれば、先頭の本文を読み取り専用の参照として返す。本文の所有権はブローカーに残る。</li>
